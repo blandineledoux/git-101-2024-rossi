@@ -44,7 +44,7 @@ class(white_wine)
 ## class + column extraction
 class(white_wine$quality)
 ## column extraction and then class
-white_wine$quality |> class()
+white_wine$quality |> class() ## works because it's a list and has "quality" as one of its components
 white_wine[["quality"]] |> class()
 white_wine$`fixed acidity` |> class()
 white_wine[["fixed acidity"]] |> class()
@@ -150,7 +150,7 @@ white_wine |>
 ```{r}
 #| eval: false
 white_wine |> 
-  select(where(\(x) is.numeric(x) & (max(x) < 5)))
+  select(where(\(x) is.numeric(x) & (max(x) < 5))) ## "select" on the names and on the properties on the content on the columns -> "where" operator || we take only numerical columns when the max of the column < 5 [is.numeric(x) & max(x <5)]
 ```
 
 ### Selecting rows
@@ -159,7 +159,7 @@ Simple selection is based on indices with `slice()`.
 
 ```{r}
 white_wine |> 
-  slice(1:5, 150:155) |>
+  slice(1:5, 150:155) |> ## take the 1st 5 values & values included between 150 and 155
   select(alcohol, quality) |>
   knitr::kable()
 ```
@@ -168,7 +168,7 @@ Condition based selection uses `filter()`.
 
 ```{r}
 white_wine |> 
-  filter(alcohol > 14) |>
+  filter(alcohol > 14) |> ## extend 14 to be a long vector in order to compare the vectors pairwise
   select(alcohol, quality, `citric acid`, `residual sugar`) |>
   knitr::kable()
 ```
@@ -204,5 +204,59 @@ white_wine |>
   geom_point(alpha=0.75) +
   scale_color_viridis_c() +
   facet_wrap(vars(`alcohol category`))
+```
+
+## Agregation functions
+Aggregate fct take a vector as an input and produces a vector w/ a single-value mean 
+A.k.a. summary functions: turn a possibly long vector into a single valeu (still a vector!)
+
+- standard statistics: 'max()', 'min()', 'median()', etc.
+- logical operations: 'any()' and all()'
+- counts and ranks: 'n()'
+
+### Simple summary use
+Based on the 'summarise()'
+
+```{r}
+white_wine |> summarise(
+  red_alcohol = median(alcohol), ## median alcohol level || "red_alcohol =" to change the name of the median
+                        sd(alcohol) ## standard deviation of alcohol level
+)
+## A |> f(B) |> g(C) == g(f(A,B),C)
+```
+
+```{r}
+white_wine |>
+  select(alcohol) |>
+  mutate(m_a = median(alcohol))
+```
+Useful if we want to compute the difference between the value and the median.
+```{r}
+white_wine |>
+  select(alcohol) |>
+  mutate(a_m_median = alcohol - median(alcohol),
+         .keep = "none")
+```
+
+```{r}
+white_wine |>
+  select(alcohol) |>
+  mutate(na = (alcohol - mean(alcohol))/sd(alcohol),
+    na_r = (alcohol - median(alcohol))/IQR(alcohol),
+         .keep = "none")
+```
+Compute inter-quartile range = difference between 3rd quartile - 1st quartile (more robust version of the standard deviation)
+
+### Simple summmary use
+Based on the 'summarise()' function or mutate.
+```{r}
+white_wine |>
+  summarise(
+    mean(alcohol),
+    sd(alcohol),
+    median(alcohol),
+    IQR(alcohol),
+    .keep = "none"
+    )
 ```
 
